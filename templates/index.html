@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>솔라피 SMS 발송 시스템</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0,0,0,.125);
+            padding: 15px 20px;
+            font-weight: 600;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        .btn-primary {
+            background-color: #4C6EF5;
+            border-color: #4C6EF5;
+            padding: 8px 20px;
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background-color: #4263eb;
+            border-color: #4263eb;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            padding: 8px 20px;
+        }
+        .nav-pills .nav-link {
+            color: #495057;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #4C6EF5;
+            color: white;
+        }
+        .form-control:focus {
+            border-color: #4C6EF5;
+            box-shadow: 0 0 0 0.2rem rgba(76, 110, 245, 0.25);
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .section {
+            margin-bottom: 2rem;
+        }
+        .template-container {
+            background-color: #f1f3f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .img-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            object-fit: contain;
+        }
+        .send-btn {
+            background-color: #228be6;
+            border-color: #228be6;
+        }
+        .send-btn:hover {
+            background-color: #1c7ed6;
+            border-color: #1c7ed6;
+        }
+        .result {
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin-top: 1rem;
+        }
+        .result-table {
+            width: 100%;
+            margin-top: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            font-size: 14px !important;
+        }
+        .result-table th, .result-table td {
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            font-size: 14px !important;
+            color: #333 !important;
+        }
+        .result-success {
+            color: #198754;
+        }
+        .result-error {
+            color: #dc3545;
+        }
+        .recipient-counter {
+            background-color: #e9ecef;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+        .multiple-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        .no-indent {
+            text-indent: 0;
+            margin-left: 0;
+            padding-left: 0;
+        }
+        .no-indent li {
+            text-indent: 0;
+            margin-left: 20px;
+        }
+        .no-indent p {
+            margin-left: 0;
+            padding-left: 0;
+            text-indent: 0;
+        }
+        
+        #imagePreviewSingle, #imagePreviewSameMessage, #imagePreviewAuto, #imagePreviewExcel {
+            max-width: 100%;
+            overflow-x: hidden;
+            margin-top: 10px;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center my-4">솔라피 SMS 발송 시스템</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="pills-single-tab" data-bs-toggle="pill" data-bs-target="#pills-single" type="button" role="tab" aria-controls="pills-single" aria-selected="true">단일 메시지</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pills-bulk-tab" data-bs-toggle="pill" data-bs-target="#pills-bulk" type="button" role="tab" aria-controls="pills-bulk" aria-selected="false">대량 메시지</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pills-auto-tab" data-bs-toggle="pill" data-bs-target="#pills-auto" type="button" role="tab" aria-controls="pills-auto" aria-selected="false">자동 메시지</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="pills-tabContent">
+                    <!-- 단일 메시지 탭 -->
+                    <div class="tab-pane fade show active" id="pills-single" role="tabpanel" aria-labelledby="pills-single-tab">
+                        <div class="card mb-4">
+                            <div class="card-header">단일 메시지 발송</div>
+                            <div class="card-body">
+                                <form id="singleForm" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label for="singleMessage" class="form-label">메시지 내용</label>
+                                        <textarea id="singleMessage" name="message" class="form-control" rows="4" required></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="recipient" class="form-label">수신번호</label>
+                                        <input type="text" class="form-control" id="recipient" name="to" placeholder="01012345678" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="singleImage" class="form-label">이미지 첨부 (선택사항, 최대 200KB)</label>
+                                        <input type="file" class="form-control" id="singleImage" name="image" accept="image/jpeg,image/jpg,image/png,image/gif">
+                                        <div class="form-text">* .jpg 파일만 가능합니다.</div>
+                                        <div id="imagePreviewSingle" class="mt-2"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <button type="submit" class="btn btn-primary send-btn">발송하기</button>
+                                        <button type="reset" class="btn btn-secondary">초기화</button>
+                                    </div>
+                                </form>
+                                <div id="singleResult" class="result mt-4 d-none">
+                                    <h5>발송 결과</h5>
+                                    <div id="singleResultContent"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 메시지 대량발송 탭 (이름 변경) -->
+                    <div class="tab-pane fade" id="pills-bulk" role="tabpanel" aria-labelledby="pills-bulk-tab">
+                        <div class="card mb-4">
+                            <div class="card-header">대량 메시지 발송</div>
+                            <div class="card-body">
+                                <form id="sameMessageForm" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label for="message" class="form-label">메시지 내용</label>
+                                        <textarea class="form-control" id="message" name="text" rows="5" required></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="recipientNumbers" class="form-label">수신번호 목록</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">입력 방식</span>
+                                            <select class="form-select" id="recipientInputType">
+                                                <option value="text" selected>직접 입력</option>
+                                                <option value="file">엑셀 파일</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="textInputGroup" class="mb-3">
+                                        <textarea class="form-control" id="recipientNumbers" name="recipients" rows="5" placeholder="01012345678,01098765432&#10;수신자 번호를 쉼표(,) 또는 줄바꿈으로 구분해주세요." required></textarea>
+                                        <div class="form-text">
+                                            <ul class="ps-0 mb-0">
+                                                <li style="list-style-type: none;">※ 수신자 번호를 쉼표(,) 또는 줄바꿈으로 구분해주세요.</li>
+                                                <li style="list-style-type: none;">※ 최대 1,000개까지 입력 가능합니다.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div id="fileInputGroup" class="mb-3 d-none">
+                                        <input type="file" class="form-control" id="recipientFile" name="file" accept=".csv">
+                                        <div class="form-text">
+                                            <ul class="ps-0 mb-0">
+                                                <li style="list-style-type: none;">※ CSV 파일 템플릿에서 '이름'과 '휴대폰번호' 열의 데이터를 입력하세요.</li>
+                                                <li style="list-style-type: none;">※ CSV 형식의 파일만 지원합니다.</li>
+                                                <li style="list-style-type: none;">※ 파일은 최대 1,000건까지 처리 가능합니다.</li>
+                                            </ul>
+                                        </div>
+                                        <div class="mt-2">
+                                            <button id="downloadBulkTemplateBtn" class="btn btn-success">템플릿 다운로드</button>
+                                        </div>
+                                        <div id="filePreviewArea" class="mt-3 d-none">
+                                            <p class="fw-bold">파일 미리보기 - 총 <span id="fileRecipientCount">0</span>명</p>
+                                            <div id="filePreviewContent" class="border p-2 rounded" style="max-height: 150px; overflow-y: auto;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="sameMessageImage" class="form-label">이미지 첨부 (선택사항, 최대 200KB)</label>
+                                        <input type="file" class="form-control" id="sameMessageImage" name="image" accept="image/jpeg,image/jpg,image/png,image/gif">
+                                        <div class="form-text">* .jpg 파일만 가능합니다.</div>
+                                        <div id="imagePreviewSameMessage" class="mt-2"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <button type="submit" class="btn btn-primary send-btn">일괄 발송하기</button>
+                                        <button type="reset" class="btn btn-secondary">초기화</button>
+                                    </div>
+                                </form>
+                                <div id="sameMessageResult" class="result d-none">
+                                    <h5>발송 결과</h5>
+                                    <div id="sameMessageResultContent"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 엑셀 업로드 탭 -->
+                    <div class="tab-pane fade" id="pills-auto" role="tabpanel" aria-labelledby="pills-auto-tab">
+                        <div class="card mb-4">
+                            <div class="card-header">자동 메시지 발송</div>
+                            <div class="card-body">
+                                <div class="template-container mb-4">
+                                    <h5>※ 엑셀(.xlsx) 템플릿 활용 가이드</h5>
+                                    <p>엑셀 템플릿을 활용하여 개인별 맞춤 메시지를 자동으로 발송할 수 있습니다.</p>
+                                    <div class="mb-3">
+                                        <ol class="no-indent">
+                                            <li>필수 열:<br>
+                                            <p class="no-indent">data 시트에 개인 정보를 입력합니다.<br>
+                                            - '이름': 수신자 이름<br>
+                                            - '휴대폰번호': 메시지를 받을 전화번호<br>
+                                            - '주문일자': 주문한 날짜 정보<br>
+                                            - '주문상품': 주문한 상품 정보</p>
+                                            </li>
+
+                                            <li>체크 박스:<br>
+                                            <p class="no-indent">체크 박스를 체크하면 해당 행만 발송됩니다.</p>
+                                            </li>
+
+                                            <li>메시지 내용:<br>
+                                            <p class="no-indent">sample 시트 A2 셀 메시지 템플릿 내용이 발송됩니다.<br>
+                                            - 예시: '안녕하세요 {이름}님, {주문일자}에 주문하신 {주문상품}이 발송되었습니다.'</p>
+                                            </li>
+
+                                            <li>템플릿 변경:<br>
+                                            <p class="no-indent">data 시트에 원하는 열을 추가하고 sample 시트에서 {변수}값을 수정합니다.<br>
+                                            - 예시: data 시트에 '주문금액' 열을 추가한 후 템플릿을 {주문금액}으로 변경</p>
+                                            </li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <button id="downloadAutoTemplateBtn" class="btn btn-success">템플릿 다운로드</button>
+                                </div>
+                                
+                                <form id="excelForm" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label for="excelFile" class="form-label">파일 첨부</label>
+                                        <input class="form-control" type="file" id="excelFile" name="file" accept=".xlsx" required>
+                                        <div class="form-text">
+                                            <ul class="ps-0 mb-0">
+                                                <li style="list-style-type: none;">※ 자동 메시지는 .xlsx 파일만 가능합니다(체크박스 기능 필수).</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="excelImage" class="form-label">이미지 첨부 (선택사항, 최대 200KB)</label>
+                                        <input type="file" class="form-control" id="excelImage" name="image" accept="image/jpeg,image/jpg,image/png,image/gif">
+                                        <div class="form-text">* .jpg 파일만 가능합니다.</div>
+                                        <div id="imagePreviewExcel" class="mt-2"></div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <button type="submit" class="btn btn-primary send-btn">미리보기</button>
+                                        <button type="reset" class="btn btn-secondary">초기화</button>
+                                    </div>
+                                </form>
+                                
+                                <div id="excelPreview" class="d-none mt-4">
+                                    <h5>메시지 미리보기</h5>
+                                    <div class="mb-2">총 <span id="totalCount">0</span>건의 메시지가 발송됩니다.</div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>번호</th>
+                                                    <th>수신자</th>
+                                                    <th>메시지 내용</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="previewBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <button type="button" id="sendExcel" class="btn btn-primary send-btn mt-3">전체 발송하기</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="excelResult" class="result d-none">
+                                    <h5>발송 결과</h5>
+                                    <div id="excelResultContent"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 이미지 미리보기 설정
+            setupImagePreview('singleImage', 'imagePreviewSingle');
+            setupImagePreview('sameMessageImage', 'imagePreviewSameMessage');
+            setupImagePreview('excelImage', 'imagePreviewExcel');
+            
+            function setupImagePreview(inputId, previewId) {
+                const input = document.getElementById(inputId);
+                const preview = document.getElementById(previewId);
+                
+                input.addEventListener('change', function() {
+                    preview.innerHTML = '';
+                    
+                    if (this.files && this.files[0]) {
+                        const file = this.files[0];
+                        
+                        if (file.size > 200 * 1024) {
+                            alert('파일 크기는 200KB 이하여야 합니다.');
+                            this.value = '';
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.classList.add('preview-image');
+                            preview.appendChild(img);
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            
+            // 초기화 버튼 기능 추가
+            document.getElementById('singleForm').addEventListener('reset', function() {
+                document.getElementById('imagePreviewSingle').innerHTML = '';
+                document.getElementById('singleResult').classList.add('d-none');
+            });
+            
+            document.getElementById('sameMessageForm').addEventListener('reset', function() {
+                document.getElementById('imagePreviewSameMessage').innerHTML = '';
+                document.getElementById('sameMessageResult').classList.add('d-none');
+                document.getElementById('filePreviewArea').classList.add('d-none');
+                
+                // 현재 선택된 입력 방식을 유지합니다
+                const currentInputType = document.getElementById('recipientInputType').value;
+                
+                // setTimeout으로 지연시켜 기본 초기화 후 적용되도록 합니다
+                setTimeout(function() {
+                    document.getElementById('recipientInputType').value = currentInputType;
+                    
+                    // 입력 방식에 따라 UI 상태 복원
+                    const textGroup = document.getElementById('textInputGroup');
+                    const fileGroup = document.getElementById('fileInputGroup');
+                    
+                    if (currentInputType === 'text') {
+                        textGroup.classList.remove('d-none');
+                        fileGroup.classList.add('d-none');
+                        document.getElementById('recipientNumbers').setAttribute('required', '');
+                        document.getElementById('recipientFile').removeAttribute('required');
+                    } else {
+                        textGroup.classList.add('d-none');
+                        fileGroup.classList.remove('d-none');
+                        document.getElementById('recipientNumbers').removeAttribute('required');
+                        document.getElementById('recipientFile').setAttribute('required', '');
+                    }
+                }, 10);
+            });
+            
+            document.getElementById('excelForm').addEventListener('reset', function() {
+                document.getElementById('imagePreviewExcel').innerHTML = '';
+                document.getElementById('excelPreview').classList.add('d-none');
+                document.getElementById('excelResult').classList.add('d-none');
+            });
+            
+            // 대량 메시지 입력 방식 전환
+            document.getElementById('recipientInputType').addEventListener('change', function() {
+                const textGroup = document.getElementById('textInputGroup');
+                const fileGroup = document.getElementById('fileInputGroup');
+                
+                if (this.value === 'text') {
+                    textGroup.classList.remove('d-none');
+                    fileGroup.classList.add('d-none');
+                    document.getElementById('recipientNumbers').setAttribute('required', '');
+                    document.getElementById('recipientFile').removeAttribute('required');
+                } else {
+                    textGroup.classList.add('d-none');
+                    fileGroup.classList.remove('d-none');
+                    document.getElementById('recipientNumbers').removeAttribute('required');
+                    document.getElementById('recipientFile').setAttribute('required', '');
+                }
+            });
+            
+            // 엑셀 파일로 수신자 처리
+            document.getElementById('recipientFile').addEventListener('change', function() {
+                if (this.files.length === 0) return;
+                
+                const formData = new FormData();
+                formData.append('file', this.files[0]);
+                
+                // 현재 입력된 메시지 내용도 함께 전송
+                const messageText = document.getElementById('message').value || '';
+                formData.append('text', messageText);  // 중요: 메시지 내용 추가
+                
+                // 타입 필드 추가 - Lambda 함수에서 요구하는 필드
+                formData.append('type', 'parse_recipients');
+                
+                // /api/lambda 엔드포인트로 직접 요청
+                fetch('/api/lambda', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Lambda 응답:', data);  // 디버깅용 로그 추가
+                    
+                    const previewArea = document.getElementById('filePreviewArea');
+                    const countElem = document.getElementById('fileRecipientCount');
+                    const contentElem = document.getElementById('filePreviewContent');
+                    
+                    if (!data.success) {
+                        alert(data.message || '수신자 목록을 읽는 중 오류가 발생했습니다.');
+                        return;
+                    }
+                    
+                    countElem.textContent = data.count;
+                    
+                    let previewHtml = '<ul class="list-unstyled mb-0">';
+                    data.recipients.slice(0, 5).forEach(phone => {
+                        previewHtml += `<li>${phone}</li>`;
+                    });
+                    
+                    if (data.count > 5) {
+                        previewHtml += `<li>... 외 ${data.count - 5}건</li>`;
+                    }
+                    
+                    previewHtml += '</ul>';
+                    contentElem.innerHTML = previewHtml;
+                    previewArea.classList.remove('d-none');
+                })
+                .catch(error => {
+                    console.error('파일 처리 오류:', error);  // 디버깅용 로그 추가
+                    alert('파일 처리 중 오류가 발생했습니다: ' + error);
+                });
+            });
+            
+            // 단일 메시지 발송
+            document.getElementById('singleForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('단일 메시지 폼 제출');
+                
+                const formData = new FormData(this);
+                const sendButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = sendButton.innerHTML;
+                
+                // 버튼 비활성화 및 로딩 표시
+                sendButton.disabled = true;
+                sendButton.innerHTML = '발송 중...';
+                
+                fetch('/api/send-single', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('단일 메시지 응답:', data);
+                    const resultDiv = document.getElementById('singleResult');
+                    const resultContent = document.getElementById('singleResultContent');
+                    
+                    resultDiv.classList.remove('d-none');
+                    
+                    if(data.success) {
+                        resultContent.innerHTML = `<div class="alert alert-success">
+                            <strong>발송 완료!</strong> 메시지가 성공적으로 발송되었습니다.
+                            <p class="small mt-2 mb-0">수신자: ${formData.get('to')}</p>
+                        </div>`;
+                    } else {
+                        resultContent.innerHTML = `<div class="alert alert-danger">
+                            <strong>발송 실패!</strong> ${data.message || '알 수 없는 오류가 발생했습니다.'}
+                        </div>`;
+                    }
+                    
+                    // 폼 초기화 하지 않음 (발송 결과 확인을 위해)
+                    // 이미지 미리보기는 그대로 유지
+                    
+                    // 버튼 다시 활성화
+                    sendButton.disabled = false;
+                    sendButton.innerHTML = originalButtonText;
+                })
+                .catch(error => {
+                    console.error('단일 메시지 오류:', error);
+                    alert('오류가 발생했습니다: ' + error);
+                    
+                    // 버튼 다시 활성화
+                    sendButton.disabled = false;
+                    sendButton.innerHTML = originalButtonText;
+                });
+            });
+            
+            // 메시지 대량 발송
+            document.getElementById('sameMessageForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const inputType = document.getElementById('recipientInputType').value;
+                const submitButton = this.querySelector('button[type="submit"]');
+                
+                // 버튼 비활성화
+                submitButton.disabled = true;
+                submitButton.innerHTML = '발송 중...';
+                
+                if (inputType === 'text') {
+                    // 직접 입력 방식은 동일하게 유지
+                    const text = document.getElementById('message').value;
+                    const recipientList = document.getElementById('recipientNumbers').value;
+                    const recipients = recipientList.split(/[,\n]/).map(num => num.trim()).filter(num => num);
+                    
+                    if(!text) {
+                        alert('메시지 내용을 입력해주세요.');
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '발송하기';
+                        return;
+                    }
+                    
+                    if(recipients.length === 0) {
+                        alert('수신자 번호를 입력해주세요.');
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '발송하기';
+                        return;
+                    }
+                    
+                    // 수신자 목록을 명확하게 전송
+                    formData.append('text', text);
+                    formData.append('recipientList', JSON.stringify(recipients));
+                    
+                    console.log('발송 요청 데이터:', {
+                        text: text,
+                        recipientList: recipients,
+                        recipientCount: recipients.length
+                    });
+                    
+                    fetch('/api/send-bulk', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        console.log('서버 응답 상태:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('서버 응답 데이터:', data);
+                        processResult(data);
+                    })
+                    .catch(handleError);
+                } else {
+                    // 엑셀 파일 처리
+                    const text = document.getElementById('message').value;
+                    const file = document.getElementById('recipientFile').files[0];
+                    
+                    if(!text) {
+                        alert('메시지 내용을 입력해주세요.');
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '발송하기';
+                        return;
+                    }
+                    
+                    if(!file) {
+                        alert('수신자 목록 엑셀 파일을 선택해주세요.');
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '발송하기';
+                        return;
+                    }
+                    
+                    // 직접 CSV/엑셀 파일을 사용하여 Lambda 함수로 처리 요청
+                    // 1. 먼저 parse_recipients로 수신자 목록 추출
+                    const excelFormData = new FormData();
+                    excelFormData.append('type', 'parse_recipients');
+                    excelFormData.append('text', text);
+                    excelFormData.append('file', file);
+                    
+                    console.log('CSV 파일 수신자 추출 요청', {
+                        type: 'parse_recipients',
+                        text: text,
+                        file: file.name
+                    });
+                    
+                    // Lambda 함수로 직접 요청
+                    fetch('/api/lambda', {
+                        method: 'POST',
+                        body: excelFormData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Lambda 수신자 추출 응답:', data);
+                        
+                        if (!data.success) {
+                            alert(data.message || '수신자 목록을 읽는 중 오류가 발생했습니다.');
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '발송하기';
+                            return;
+                        }
+                        
+                        // 2. 추출된 수신자 목록으로 send_message 요청
+                        if (data.recipients && data.recipients.length > 0) {
+                            const sendFormData = new FormData();
+                            sendFormData.append('type', 'send_message');
+                            sendFormData.append('text', text);
+                            // 직접 문자열 배열을 전송하여 JSON.parse 과정에서 오류가 생기지 않도록 함
+                            if (Array.isArray(data.recipients)) {
+                                // 배열을 직접 전달
+                                for (let i = 0; i < data.recipients.length; i++) {
+                                    // 각 수신자를 개별 필드로 추가
+                                    sendFormData.append(`recipients[${i}]`, data.recipients[i]);
+                                }
+                            } else {
+                                try {
+                                    // 이미 JSON 문자열이면 파싱해서 배열로 변환
+                                    let recipientsArray = [];
+                                    if (typeof data.recipients === 'string') {
+                                        recipientsArray = JSON.parse(data.recipients);
+                                    } else {
+                                        recipientsArray = data.recipients;
+                                    }
+                                    
+                                    // 각 수신자를 개별 필드로 추가
+                                    for (let i = 0; i < recipientsArray.length; i++) {
+                                        sendFormData.append(`recipients[${i}]`, recipientsArray[i]);
+                                    }
+                                } catch (e) {
+                                    console.error('수신자 목록 변환 오류:', e);
+                                    alert('수신자 목록 처리 중 오류가 발생했습니다: ' + e);
+                                    submitButton.disabled = false;
+                                    submitButton.innerHTML = '발송하기';
+                                    return;
+                                }
+                            }
+                            
+                            // 이미지가 있으면 추가
+                            const image = document.getElementById('sameMessageImage').files[0];
+                            if(image) {
+                                const imageReader = new FileReader();
+                                imageReader.onload = function(e) {
+                                    const imageBase64 = e.target.result.split(',')[1];
+                                    sendFormData.append('image', JSON.stringify({
+                                        data: imageBase64,
+                                        filename: image.name
+                                    }));
+                                    
+                                    sendMessagesRequest(sendFormData);
+                                };
+                                imageReader.readAsDataURL(image);
+                            } else {
+                                sendMessagesRequest(sendFormData);
+                            }
+                        } else {
+                            alert('추출된 수신자가 없습니다.');
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '발송하기';
+                        }
+                    })
+                    .catch(handleError);
+                    
+                    function sendMessagesRequest(formData) {
+                        fetch('/api/lambda', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Lambda 메시지 발송 응답:', data);
+                            processResult(data);
+                        })
+                        .catch(handleError);
+                    }
+                }
+                
+                function processResult(data) {
+                    const resultDiv = document.getElementById('sameMessageResult');
+                    const resultContent = document.getElementById('sameMessageResultContent');
+                    
+                    resultDiv.classList.remove('d-none');
+                    
+                    // 사용자 친화적인 결과 표시
+                    let resultHtml = '<table class="table table-striped result-table">';
+                    resultHtml += '<tr><th>구분</th><th>내용</th></tr>';
+                    
+                    if (data.total) {
+                        resultHtml += `<tr><td>총 발송건수</td><td>${data.total}건</td></tr>`;
+                        resultHtml += `<tr><td>성공</td><td>${data.total - (data.failedCount || 0)}건</td></tr>`;
+                        
+                        if (data.failedCount > 0) {
+                            resultHtml += `<tr><td>실패</td><td class="result-error">${data.failedCount}건</td></tr>`;
+                            
+                            if (data.failedList && data.failedList.length > 0) {
+                                resultHtml += '<tr><td>실패 상세</td><td>';
+                                data.failedList.forEach(failed => {
+                                    resultHtml += `<div>${failed.to}: ${failed.reason || '알 수 없는 오류'}</div>`;
+                                });
+                                resultHtml += '</td></tr>';
+                            }
+                        }
+                    } else if (data.message) {
+                        resultHtml += `<tr><td>메시지</td><td>${data.message}</td></tr>`;
+                    } else {
+                        resultHtml += '</table>';
+                        resultHtml += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    }
+                    
+                    resultHtml += '</table>';
+                    resultContent.innerHTML = resultHtml;
+                    
+                    // 폼 초기화 하지 않음 (결과 확인을 위해)
+                    // 버튼 다시 활성화
+                    document.querySelectorAll('#sameMessageForm button[type="submit"]').forEach(button => {
+                        button.disabled = false;
+                        button.innerHTML = '발송하기';
+                    });
+                }
+                
+                function handleError(error) {
+                    console.error('대량 메시지 오류:', error);
+                    alert('오류가 발생했습니다: ' + error);
+                    
+                    // 버튼 다시 활성화
+                    document.querySelectorAll('#sameMessageForm button[type="submit"]').forEach(button => {
+                        button.disabled = false;
+                        button.innerHTML = '발송하기';
+                    });
+                }
+            });
+            
+            // 엑셀 업로드 및 미리보기
+            document.getElementById('excelForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const file = document.getElementById('excelFile').files[0];
+                if (!file) {
+                    alert('엑셀 파일을 선택해주세요.');
+                    return;
+                }
+
+                const submitButton = document.querySelector('#excelForm button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '처리 중...';
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Data = e.target.result.split(',')[1]; // base64 데이터 추출
+                    
+                    const formData = new FormData();
+                    formData.append('type', 'auto_excel_preview');
+                    formData.append('excel', JSON.stringify({
+                        data: base64Data,
+                        filename: file.name
+                    }));
+                    formData.append('preview', true);
+
+                    // 이미지가 있으면 추가
+                    const image = document.getElementById('excelImage').files[0];
+                    if (image) {
+                        const imageReader = new FileReader();
+                        imageReader.onload = function(e) {
+                            const imageBase64 = e.target.result.split(',')[1];
+                            formData.append('image', JSON.stringify({
+                                data: imageBase64,
+                                filename: image.name
+                            }));
+                            
+                            sendRequest(formData);
+                        };
+                        imageReader.readAsDataURL(image);
+                    } else {
+                        sendRequest(formData);
+                    }
+                };
+                
+                reader.readAsDataURL(file);
+                
+                function sendRequest(formData) {
+                    fetch('/api/lambda', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '미리보기';
+                        
+                        if (!data.success) {
+                            alert(data.message || '엑셀 파일 처리 중 오류가 발생했습니다.');
+                            return;
+                        }
+                        
+                        const previewDiv = document.getElementById('excelPreview');
+                        const totalCountSpan = document.getElementById('totalCount');
+                        const previewBody = document.getElementById('previewBody');
+                        
+                        totalCountSpan.textContent = data.total || 0;
+                        
+                        previewBody.innerHTML = '';
+                        if (data.preview && data.preview.length > 0) {
+                            data.preview.forEach((item, index) => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${index + 1}</td>
+                                    <td>${item.phone}</td>
+                                    <td>${item.text}</td>
+                                `;
+                                previewBody.appendChild(row);
+                            });
+                            
+                            if (data.total > data.preview.length) {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td colspan="3" class="text-center">... 외 ${data.total - data.preview.length}건</td>
+                                `;
+                                previewBody.appendChild(row);
+                            }
+                        } else {
+                            previewBody.innerHTML = '<tr><td colspan="3" class="text-center">미리볼 데이터가 없습니다.</td></tr>';
+                        }
+                        
+                        previewDiv.classList.remove('d-none');
+                    })
+                    .catch(error => {
+                        console.error('엑셀 처리 오류:', error);
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '미리보기';
+                        alert('오류가 발생했습니다: ' + error);
+                    });
+                }
+            });
+            
+            // 엑셀 파일 기반 발송
+            document.getElementById('sendExcel').addEventListener('click', function() {
+                const file = document.getElementById('excelFile').files[0];
+                if (!file) {
+                    alert('엑셀 파일을 선택해주세요.');
+                    return;
+                }
+                
+                if (confirm('선택한 메시지를 모두 발송하시겠습니까?')) {
+                    this.disabled = true;
+                    this.innerHTML = '발송 중...';
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const base64Data = e.target.result.split(',')[1]; // base64 데이터 추출
+                        
+                        const formData = new FormData();
+                        formData.append('type', 'auto_excel_send');
+                        formData.append('excel', JSON.stringify({
+                            data: base64Data,
+                            filename: file.name
+                        }));
+                        
+                        // 이미지가 있으면 추가
+                        const image = document.getElementById('excelImage').files[0];
+                        if (image) {
+                            const imageReader = new FileReader();
+                            imageReader.onload = function(e) {
+                                const imageBase64 = e.target.result.split(',')[1];
+                                formData.append('image', JSON.stringify({
+                                    data: imageBase64,
+                                    filename: image.name
+                                }));
+                                
+                                sendRequest(formData);
+                            };
+                            imageReader.readAsDataURL(image);
+                        } else {
+                            sendRequest(formData);
+                        }
+                    };
+                    
+                    reader.readAsDataURL(file);
+                    
+                    const sendButton = this;
+                    
+                    function sendRequest(formData) {
+                        fetch('/api/lambda', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            sendButton.disabled = false;
+                            sendButton.innerHTML = '전체 발송하기';
+                            
+                            if (!data.success) {
+                                alert(data.message || '메시지 발송 중 오류가 발생했습니다.');
+                                return;
+                            }
+                            
+                            // 결과를 테이블 형식으로 표시
+                            const resultDiv = document.getElementById('excelResult');
+                            const resultContent = document.getElementById('excelResultContent');
+                            
+                            // 결과 테이블 생성
+                            let resultHtml = '<table class="table table-striped result-table">';
+                            resultHtml += '<tr><th>구분</th><th>내용</th></tr>';
+                            
+                            if (data.total) {
+                                resultHtml += `<tr><td>총 발송건수</td><td>${data.total}건</td></tr>`;
+                                resultHtml += `<tr><td>성공</td><td>${data.total - (data.failedCount || 0)}건</td></tr>`;
+                                
+                                if (data.failedCount > 0) {
+                                    resultHtml += `<tr><td>실패</td><td class="result-error">${data.failedCount}건</td></tr>`;
+                                    
+                                    if (data.failedList && data.failedList.length > 0) {
+                                        resultHtml += '<tr><td>실패 상세</td><td>';
+                                        data.failedList.forEach(failed => {
+                                            resultHtml += `<div>${failed.to}: ${failed.reason || '알 수 없는 오류'}</div>`;
+                                        });
+                                        resultHtml += '</td></tr>';
+                                    }
+                                }
+                            } else if (data.message) {
+                                resultHtml += `<tr><td>메시지</td><td>${data.message}</td></tr>`;
+                            } else {
+                                resultHtml += `<tr><td colspan="2">추가 정보 없음</td></tr>`;
+                            }
+                            
+                            resultHtml += '</table>';
+                            resultContent.innerHTML = resultHtml;
+                            
+                            // 결과 DIV 표시
+                            resultDiv.classList.remove('d-none');
+                            
+                            // 스크롤을 결과 영역으로 이동
+                            resultDiv.scrollIntoView({ behavior: 'smooth' });
+                        })
+                        .catch(error => {
+                            console.error('메시지 발송 오류:', error);
+                            sendButton.disabled = false;
+                            sendButton.innerHTML = '전체 발송하기';
+                            alert('오류가 발생했습니다: ' + error);
+                        });
+                    }
+                }
+            });
+            
+            // 엑셀 템플릿 다운로드 버튼 이벤트
+            document.getElementById('downloadBulkTemplateBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                fetch('/api/lambda', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'get_template'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert('템플릿 파일을 다운로드할 수 없습니다. 잠시 후 다시 시도해주세요.');
+                        return;
+                    }
+                    
+                    // base64 디코딩 및 다운로드
+                    const binaryString = window.atob(data.data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    const blob = new Blob([bytes], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'sample_template.csv';  // 파일명을 .csv로 변경
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error('템플릿 다운로드 오류:', error);
+                    alert('템플릿 파일 다운로드 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                });
+            });
+            
+            document.getElementById('downloadAutoTemplateBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = '/api/download-template/auto';
+            });
+        });
+    </script>
+</body>
+</html>

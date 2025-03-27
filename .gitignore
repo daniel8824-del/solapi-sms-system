@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Data files
+data/*.xlsx
+!data/bulk_template.xlsx
+
+# 로그 파일
+*.log
+
+# 업로드 파일
+uploads/*
+!uploads/.gitkeep
+
+# Lambda serverless
+lambda/.serverless/
+lambda/.requirements.zip
+
+# 데이터 파일 (필요시 주석 처리)
+# data/
+
+# 시스템 파일
+.DS_Store
+Thumbs.db 

@@ -1,0 +1,56 @@
+service: solapi-sms-service
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: ap-northeast-2
+  memorySize: 512
+  timeout: 30
+  deploymentBucket:
+    name: solapi-files
+    serverSideEncryption: AES256
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - lambda:*
+            - s3:*
+            - logs:*
+            - cloudformation:*
+            - apigateway:*
+            - apigateway:GET
+            - apigateway:POST
+            - apigateway:PUT
+            - apigateway:DELETE
+            - apigateway:PATCH
+            - apigateway:TagResource
+            - apigateway:UntagResource
+          Resource: '*'
+  environment:
+    SOLAPI_API_KEY: ${env:SOLAPI_API_KEY, ''}
+    SOLAPI_API_SECRET: ${env:SOLAPI_API_SECRET, ''}
+    SOLAPI_SENDER_PHONE: ${env:SOLAPI_SENDER_PHONE, ''}
+    MY_AWS_ACCESS_KEY: ${env:AWS_ACCESS_KEY, ''}
+    MY_AWS_SECRET_KEY: ${env:AWS_SECRET_KEY, ''}
+    MY_AWS_REGION: ${env:AWS_REGION, 'ap-northeast-2'}
+    MY_AWS_BUCKET_NAME: ${env:AWS_BUCKET_NAME, ''}
+
+functions:
+  smsHandler:
+    handler: lambda_function.lambda_handler
+    events:
+      - httpApi:
+          path: /
+          method: post
+    url: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: false
+    zip: true 
